@@ -1,65 +1,49 @@
 import 'package:flutter/material.dart';
+import 'package:level_up_life/helpers/database_helper.dart';
+import 'package:level_up_life/screens/dashboard_screen.dart';
+import 'package:level_up_life/screens/onboarding_screen.dart';
+import 'package:sqflite/sqflite.dart';
 
 void main() {
+  // Ensure that Flutter widgets are initialized before checking the database.
+  WidgetsFlutterBinding.ensureInitialized(); 
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  // This function checks if a user exists in the database.
+  Future<bool> _isUserOnboarded() async {
+    final db = await DatabaseHelper().database;
+    final List<Map<String, dynamic>> users = await db.query('user');
+    return users.isNotEmpty;
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
-        body: Container(
-          // For the radial gradient background
-          decoration: const BoxDecoration(
-            gradient: RadialGradient(
-              colors: [Color(0x4DF8F406), Colors.white],
-              center: Alignment.center,
-              radius: 1.0,
-            ),
-          ),
-          // To center the content
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                // 1. Your Logo Image
-                Image.asset(
-                  'assets/image/logo.png', // Make sure to add your logo to this path
-                  width: 150,
-                ),
-                const SizedBox(height: 50), // For spacing
-
-                // 2. Your Heading
-                const Text(
-                  'Level Up Your Life',
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 10),
-
-                // 3. Your Body Text
-                const Text(
-                  'Turn daily tasks into epic quests and earn rewards for your achievements.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
-                ),
-                const SizedBox(height: 100),
-
-                // 4. Your Buttons
-                ElevatedButton(
-                  onPressed: () {},
-                  child: const Text('Get Started'),
-                ),
-                OutlinedButton(
-                  onPressed: () {},
-                  child: const Text('I already have an account'),
-                ),
-              ],
-            ),
-          ),
-        ),
+      title: 'Level Up Life',
+      theme: ThemeData(
+        primarySwatch: Colors.yellow,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+        fontFamily: 'Spline Sans',
+      ),
+      // Use a FutureBuilder to decide which screen to show.
+      home: FutureBuilder<bool>(
+        future: _isUserOnboarded(),
+        builder: (context, snapshot) {
+          // While waiting for the future to complete, show a loading indicator.
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          }
+          // If the future completes and the user is onboarded, show the dashboard.
+          if (snapshot.hasData && snapshot.data == true) {
+            return const DashboardScreen();
+          }
+          // Otherwise, show the onboarding screen.
+          return const OnboardingScreen();
+        },
       ),
     );
   }
