@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:level_up_life/helpers/database_helper.dart';
 import 'package:level_up_life/models/activity_model.dart';
+import 'package:level_up_life/models/user_model.dart';
 
 class ActivityScreen extends StatefulWidget {
   const ActivityScreen({super.key});
@@ -12,7 +13,7 @@ class ActivityScreen extends StatefulWidget {
 class _ActivityScreenState extends State<ActivityScreen> {
   final _formKey = GlobalKey<FormState>();
   String _activityName = '';
-  String _category = 'Work'; // Default category
+  String _category = 'Work';
   TimeOfDay? _startTime;
   String _duration = '';
   String _notes = '';
@@ -29,7 +30,6 @@ class _ActivityScreenState extends State<ActivityScreen> {
     }
   }
 
-  // This function will handle saving the activity
   void _saveActivity() async {
     if (_startTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -44,7 +44,6 @@ class _ActivityScreenState extends State<ActivityScreen> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
-      // Simple XP calculation: 10 XP for any activity for now
       const int xpGained = 10;
 
       final newActivity = Activity(
@@ -59,7 +58,14 @@ class _ActivityScreenState extends State<ActivityScreen> {
 
       await DatabaseHelper().insertActivity(newActivity);
 
-      // TODO: Update user's total XP
+      // --- Start of new logic ---
+      // Get the current user to update their XP
+      User? currentUser = await DatabaseHelper().getUser();
+      if (currentUser != null) {
+        int updatedXp = currentUser.xp + xpGained;
+        await DatabaseHelper().updateUserXP(currentUser.id, updatedXp);
+      }
+      // --- End of new logic ---
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -78,6 +84,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // The build method remains the same as before
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add Activity'),

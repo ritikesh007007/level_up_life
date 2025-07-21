@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:level_up_life/helpers/database_helper.dart';
 import 'package:level_up_life/screens/dashboard_screen.dart';
+import 'package:sqflite/sqflite.dart'; // <-- Add this line
+// ...existing code...
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
